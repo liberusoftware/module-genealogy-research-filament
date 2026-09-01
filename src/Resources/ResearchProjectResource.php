@@ -13,6 +13,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Liberu\Genealogy\Research\Actions\DeleteResearchProject;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchProjectResource\Pages\CreateResearchProject;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchProjectResource\Pages\EditResearchProject;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchProjectResource\Pages\ListResearchProjects;
@@ -24,17 +26,16 @@ final class ResearchProjectResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Genealogy';
+    protected static string|\UnitEnum|null $navigationGroup = 'Research & Evidence';
 
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
             TextInput::make('name')->required()->maxLength(255),
-            Select::make('status')->options([
-                'draft' => 'Draft',
-                'active' => 'Active',
-                'completed' => 'Completed',
-            ])->required(),
+            Select::make('status')->options(array_combine(
+                ResearchProject::STATUSES,
+                array_map(fn (string $status): string => str_replace('_', ' ', ucfirst($status)), ResearchProject::STATUSES),
+            ))->required(),
         ]);
     }
 
@@ -46,7 +47,7 @@ final class ResearchProjectResource extends Resource
             TextColumn::make('created_at')->dateTime()->sortable(),
         ])->recordActions([
             EditAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()->action(fn (Model $record): mixed => app(DeleteResearchProject::class)->execute($record)),
         ]);
     }
 

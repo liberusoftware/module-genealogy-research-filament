@@ -15,6 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
+use Liberu\Genealogy\Research\Actions\DeleteResearchEntry;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchEntryResource\Pages\CreateResearchEntry;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchEntryResource\Pages\EditResearchEntry;
 use Liberu\Genealogy\Research\Filament\Resources\ResearchEntryResource\Pages\ListResearchEntries;
@@ -26,7 +28,7 @@ final class ResearchEntryResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Genealogy';
+    protected static string|\UnitEnum|null $navigationGroup = 'Research & Evidence';
 
     public static function form(Schema $schema): Schema
     {
@@ -47,7 +49,10 @@ final class ResearchEntryResource extends Resource
             TextColumn::make('kind')->badge()->sortable(),
             TextColumn::make('status')->badge()->sortable(),
             TextColumn::make('due_date')->date()->sortable(),
-        ])->recordActions([EditAction::make(), DeleteAction::make()]);
+        ])->recordActions([
+            EditAction::make(),
+            DeleteAction::make()->action(fn (Model $record): mixed => app(DeleteResearchEntry::class)->execute($record)),
+        ]);
     }
 
     /** @return array<string, PageRegistration> */
